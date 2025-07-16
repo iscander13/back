@@ -8,7 +8,7 @@ import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity; // Убедитесь, что это импортировано
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -43,23 +43,22 @@ public class SecurityConfig {
                     "/swagger-resources/**",
                     "/webjars/**",
                     // Разрешаем доступ к эндпоинтам аутентификации и восстановления пароля
-                    "/api/v1/auth/**", // Включает /api/v1/auth/admin/login
+                    "/api/v1/auth/**",
                     "/api/v1/recovery/**",
                     // Базовые пути, которые могут быть доступны без аутентификации (например, корневой URL)
                     "/",
                     "/error"
                 ).permitAll() // Эти пути доступны всем
                 
-                // Только пользователи с ролью "ADMIN" могут получить доступ к /api/v1/admin/**
-                // Это ключевое правило для панели администратора
-                .requestMatchers("/api/v1/admin/**").hasRole("ADMIN") 
+                // Только пользователи с ролью "ADMIN" или "SUPER_ADMIN" могут получить доступ к /api/v1/admin/**
+                .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
                 
                 // Все остальные API-эндпоинты, начинающиеся с /api/, требуют аутентификации
                 // (но не требуют конкретной роли, если только это не /api/v1/admin/**)
-                .requestMatchers("/api/**").authenticated() 
+                .requestMatchers("/api/**").authenticated()
                 
                 // Все остальные запросы (не /api) также требуют аутентификации
-                .anyRequest().authenticated() 
+                .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess
                 .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Используем безсессионную аутентификацию (JWT)
@@ -73,27 +72,26 @@ public class SecurityConfig {
     }
 
     @Bean
-public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration config = new CorsConfiguration();
-    
-    // ✅ Удалили [] и () — просто чистые HTTPS-адреса
-    config.setAllowedOrigins(List.of(
-            "http://localhost:5173",
-            "https://agrofarm.kz",
-            "https://user.agrofarm.kz",
-            "https://www.user.agrofarm.kz",
-            "https://www.agrofarm.kz"
-    ));
-    
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-    config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
-    config.setExposedHeaders(List.of("Authorization"));
-    config.setAllowCredentials(true);
+    public CorsConfigurationSource corsConfigurationSource() {
+        CorsConfiguration config = new CorsConfiguration();
+        
+        config.setAllowedOrigins(List.of(
+                "http://localhost:5173",
+                "https://agrofarm.kz",
+                "https://user.agrofarm.kz",
+                "https://www.user.agrofarm.kz",
+                "https://www.agrofarm.kz"
+        ));
+        
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowCredentials(true);
 
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", config);
-    return source;
-}
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
+        return source;
+    }
 
 
     @Bean

@@ -1,4 +1,4 @@
-package com.example.backend.config; // Или com.example.backend.util, или любой другой подходящий пакет
+package com.example.backend.config;
 
 import org.springframework.boot.CommandLineRunner;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -18,17 +18,30 @@ public class AdminUserInitializer implements CommandLineRunner {
 
     @Override
     public void run(String... args) throws Exception {
-        // Проверяем, существует ли администратор с email 'admin@example.com'
+        // Проверяем, существует ли пользователь-администратор
         if (userRepository.findByEmail("admin@example.com").isEmpty()) {
             User admin = User.builder()
-                    .email("admin@example.com") // Email администратора
-                    .passwordHash(passwordEncoder.encode("admin123")) // Пароль администратора (будет хеширован)
-                    .role("ADMIN") // Роль администратора
+                    .email("admin@example.com")
+                    .passwordHash(passwordEncoder.encode("admin123"))
+                    .role("ADMIN")
                     .build();
             userRepository.save(admin);
             System.out.println("Создан пользователь-администратор: admin@example.com");
         } else {
             System.out.println("Пользователь-администратор уже существует.");
+        }
+
+        // Проверяем, существует ли пользователь-супер-администратор
+        if (userRepository.findByEmail("superadmin@example.com").isEmpty()) {
+            User superAdmin = User.builder()
+                    .email("superadmin@example.com") // Email супер-администратора
+                    .passwordHash(passwordEncoder.encode("superadminpass")) // Установите надежный пароль
+                    .role("SUPER_ADMIN") // Роль супер-администратора
+                    .build();
+            userRepository.save(superAdmin);
+            System.out.println("Создан пользователь-супер-администратор: superadmin@example.com");
+        } else {
+            System.out.println("Пользователь-супер-администратор уже существует.");
         }
     }
 }

@@ -3,6 +3,8 @@ package com.example.backend.service;
 import java.util.List;
 import java.util.Optional;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
@@ -70,25 +72,42 @@ public class AdminService {
         return "Пользователь с ID " + userId + " и все его данные успешно удалены.";
     }
 
-    // НОВЫЙ МЕТОД: Изменение роли пользователя
     @Transactional
     public String updateUserRole(Long userId, String newRole) {
+        // Получаем информацию об аутентифицированном пользователе
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        // Предполагаем, что у пользователя одна роль. Если может быть несколько, нужно адаптировать.
+        String currentUsersRole = authentication.getAuthorities().iterator().next().getAuthority();
+
         Optional<User> userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
             throw new RuntimeException("Пользователь с ID " + userId + " не найден.");
         }
 
-        User user = userOptional.get();
-        // Приводим новую роль к верхнему регистру, чтобы избежать ошибок с "admin" vs "ADMIN"
+        User userToUpdate = userOptional.get();
         String normalizedNewRole = newRole.toUpperCase();
 
-        // Проверяем, что новая роль является одной из допустимых (например, "USER", "ADMIN")
-        if (!normalizedNewRole.equals("USER") && !normalizedNewRole.equals("ADMIN")) {
-            throw new IllegalArgumentException("Недопустимая роль: " + newRole + ". Допустимые роли: USER, ADMIN.");
+        // Валидация новой роли
+        if (!normalizedNewRole.equals("USER") && !normalizedNewRole.equals("ADMIN") && !normalizedNewRole.equals("SUPER_ADMIN")) {
+            throw new IllegalArgumentException("Недопустимая роль: " + newRole + ". Допустимые роли: USER, ADMIN, SUPER_ADMIN.");
         }
+        
+        // --- Применение иерархии ролей ---
+        // Если текущий пользователь - ADMIN, он имеет ограничения
+        if (currentUsersRole.equals("ROLE_ADMIN")) { // Spring Security добавляет префикс "ROLE_"
+            // ADMIN не может назначать роли ADMIN или SUPER_ADMIN
+            if (normalizedNewRole.equals("ADMIN") || normalizedNewRole.equals("SUPER_ADMIN")) {
+                throw new SecurityException("Администратор не может присваивать роль " + normalizedNewRole + ".");
+            }
+            // ADMIN не может изменять роль SUPER_ADMIN пользователя
+            if (userToUpdate.getRole().equals("SUPER_ADMIN")) {
+                throw new SecurityException("Администратор не может изменять роль супер-администратора.");
+            }
+        }
+        // SUPER_ADMIN может изменять любые роли.
 
-        user.setRole(normalizedNewRole);
-        userRepository.save(user);
+        userToUpdate.setRole(normalizedNewRole);
+        userRepository.save(userToUpdate);
         return "Роль пользователя " + userId + " успешно изменена на " + normalizedNewRole + ".";
     }
 }

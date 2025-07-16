@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.example.backend.dto.UpdateUserRoleRequest;
 import com.example.backend.entiity.User;
 import com.example.backend.service.AdminService;
-import com.example.backend.dto.UpdateUserRoleRequest; // Импортируем новый DTO
 
 import lombok.RequiredArgsConstructor;
 
@@ -25,32 +25,36 @@ public class AdminController {
 
     private final AdminService adminService;
 
-    @PreAuthorize("hasRole('ADMIN')")
+    // ADMIN и SUPER_ADMIN могут просматривать пользователей
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @GetMapping("/users")
     public ResponseEntity<List<User>> getAllUsers() {
         return ResponseEntity.ok(adminService.getAllUsers());
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    // ADMIN и SUPER_ADMIN могут обновлять email
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @PutMapping("/users/{userId}/email")
     public ResponseEntity<String> updateUserEmail(@PathVariable Long userId, @RequestBody String newEmail) {
         return ResponseEntity.ok(adminService.updateUserEmail(userId, newEmail));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    // ADMIN и SUPER_ADMIN могут сбрасывать пароль
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @PutMapping("/users/{userId}/password")
     public ResponseEntity<String> resetUserPassword(@PathVariable Long userId, @RequestBody String newPassword) {
         return ResponseEntity.ok(adminService.resetUserPassword(userId, newPassword));
     }
 
-    @PreAuthorize("hasRole('ADMIN')")
+    // ADMIN и SUPER_ADMIN могут удалять пользователей
+    @PreAuthorize("hasRole('ADMIN') or hasRole('SUPER_ADMIN')")
     @DeleteMapping("/users/{userId}")
     public ResponseEntity<String> deleteUser(@PathVariable Long userId) {
         return ResponseEntity.ok(adminService.deleteUser(userId));
     }
 
-    // НОВЫЙ ЭНДПОИНТ: Изменение роли пользователя
-    @PreAuthorize("hasRole('ADMIN')")
+    // Только SUPER_ADMIN может изменять роли пользователей
+    @PreAuthorize("hasRole('SUPER_ADMIN')")
     @PutMapping("/users/{userId}/role")
     public ResponseEntity<String> updateUserRole(@PathVariable Long userId, @RequestBody UpdateUserRoleRequest request) {
         return ResponseEntity.ok(adminService.updateUserRole(userId, request.getNewRole()));

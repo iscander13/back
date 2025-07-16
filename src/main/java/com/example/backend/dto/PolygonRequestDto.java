@@ -1,5 +1,7 @@
 package com.example.backend.dto;
 
+import java.util.UUID; // Импортируем UUID
+
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
@@ -10,6 +12,7 @@ import lombok.Setter;
 @Setter
 @NoArgsConstructor
 public class PolygonRequestDto {
+    private UUID id; // ДОБАВЛЕНО: ID полигона
     private String name;
     private String geoJson;
     private String crop;

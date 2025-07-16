@@ -1,10 +1,9 @@
-// src/main/java/com/example/backend/service/AuthService.java
 package com.example.backend.service;
 
 import java.util.Collections;
 import java.util.List;
 
-import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.AuthenticationManager; // Убедитесь, что Optional импортирован
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -15,12 +14,12 @@ import com.example.backend.JWT.JwtService;
 import com.example.backend.dto.AdminLoginRequest;
 import com.example.backend.dto.AdminLoginResponse;
 import com.example.backend.dto.LoginRequest;
-import com.example.backend.dto.LoginResponse; // Убедитесь, что это ваш класс пользователя
-import com.example.backend.dto.RegisterRequest;
+import com.example.backend.dto.LoginResponse;
+import com.example.backend.dto.RegisterRequest; // Убедитесь, что это ваш класс пользователя
 import com.example.backend.entiity.User;
-import com.example.backend.repository.UserRepository; // Импорт для создания списка из одной роли
+import com.example.backend.repository.UserRepository;
 
-import lombok.RequiredArgsConstructor; // Импорт List
+import lombok.RequiredArgsConstructor; // Импорт для создания списка из одной роли
 
 @Service
 @RequiredArgsConstructor
@@ -79,8 +78,9 @@ public class AuthService {
             throw new RuntimeException("Неверные учетные данные администратора.");
         }
 
-        if (!"ADMIN".equals(adminUser.getRole())) {
-            throw new RuntimeException("У вас нет прав администратора.");
+        // ИЗМЕНЕНИЕ ЗДЕСЬ: Разрешаем вход для ADMIN и SUPER_ADMIN
+        if (!"ADMIN".equals(adminUser.getRole()) && !"SUPER_ADMIN".equals(adminUser.getRole())) {
+            throw new RuntimeException("У вас нет прав администратора или супер-администратора.");
         }
 
         Authentication authentication = authenticationManager.authenticate(
