@@ -36,7 +36,6 @@ public class ExcelCropParser {
                 String cellText = getString(firstCell);
 
                 // DEBUG: Вывод содержимого ячейки A
-                System.out.println("➡️ Ячейка A" + (row.getRowNum() + 1) + ": " + cellText);
 
                 if (cellText.startsWith("Глава")) {
                     currentChapter = new ChapterDto();
@@ -44,8 +43,6 @@ public class ExcelCropParser {
                     currentChapter.setCrops(new ArrayList<>());
                     chapters.add(currentChapter);
                     currentCrop = null;
-                    // DEBUG: Проверяем, добавлена ли глава
-                    System.out.println("✅ Обнаружена Глава: " + currentChapter.getTitle() + ", Всего глав в списке: " + chapters.size());
 
                 } else if (cellText.startsWith("Параграф")) {
                     currentCrop = new CropDto();
@@ -53,12 +50,7 @@ public class ExcelCropParser {
                     currentCrop.setVarieties(new ArrayList<>());
                     if (currentChapter != null) {
                         currentChapter.getCrops().add(currentCrop);
-                        // DEBUG: Проверяем, добавлен ли параграф к главе
-                        System.out.println("✅ Обнаружен Параграф: " + currentCrop.getName() + ", Всего параграфов в главе '" + currentChapter.getTitle() + "': " + currentChapter.getCrops().size());
-                    } else {
-                        // DEBUG: Если параграф найден до главы
-                        System.out.println("⚠️ Обнаружен Параграф '" + currentCrop.getName() + "' до инициализации Главы!");
-                    }
+                    } 
 
                 } else if (cellText.matches("\\d+\\.?")) { // "1." или "1"
                     try {
@@ -73,7 +65,6 @@ public class ExcelCropParser {
                             variety.setRegion(region);
                             currentCrop.getVarieties().add(variety);
                             // DEBUG: Проверяем, добавлен ли сорт к параграфу
-                            System.out.println("✅ Обнаружен Сорт: " + variety.getName() + ", Всего сортов в параграфе '" + currentCrop.getName() + "': " + currentCrop.getVarieties().size());
                         } else if (currentCrop == null) {
                              System.out.println("⚠️ Обнаружен Сорт '" + name + "' до инициализации Параграфа!");
                         } else if (name == null || name.isBlank()) {
