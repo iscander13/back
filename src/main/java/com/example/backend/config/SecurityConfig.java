@@ -73,29 +73,28 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        // Разрешенные источники (ваши домены фронтенда)
-        config.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "[https://agrofarm.kz](https://agrofarm.kz)",
-                "[https://user.agrofarm.kz](https://user.agrofarm.kz)",
-                "[https://www.user.agrofarm.kz](https://www.user.agrofarm.kz)",
-                "[https://www.agrofarm.kz](https://www.agrofarm.kz)"
-            ));        
-        // Разрешенные HTTP-методы
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        // Разрешенные заголовки запроса
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
-        // Заголовки, которые могут быть доступны клиенту
-        config.setExposedHeaders(List.of("Authorization"));
-        // Разрешаем отправку учетных данных (куки, заголовки авторизации)
-        config.setAllowCredentials(true);
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    
+    // ✅ Удалили [] и () — просто чистые HTTPS-адреса
+    config.setAllowedOrigins(List.of(
+            "http://localhost:5173",
+            "https://agrofarm.kz",
+            "https://user.agrofarm.kz",
+            "https://www.user.agrofarm.kz",
+            "https://www.agrofarm.kz"
+    ));
+    
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+    config.setExposedHeaders(List.of("Authorization"));
+    config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config); // Применяем конфигурацию CORS ко всем путям
-        return source;
-    }
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config);
+    return source;
+}
+
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
