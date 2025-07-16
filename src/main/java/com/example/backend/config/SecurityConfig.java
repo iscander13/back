@@ -38,17 +38,19 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 // Разрешаем доступ к Swagger UI и API документации
                 .requestMatchers(
-                    "/swagger-ui/**",
-                    "/v3/api-docs/**",
-                    "/swagger-resources/**",
-                    "/webjars/**",
-                    // Разрешаем доступ к эндпоинтам аутентификации и восстановления пароля
-                    "/api/v1/auth/**",
-                    "/api/v1/recovery/**",
-                    // Базовые пути, которые могут быть доступны без аутентификации (например, корневой URL)
-                    "/",
-                    "/error"
-                ).permitAll() // Эти пути доступны всем
+        "/swagger-ui/**",
+        "/v3/api-docs/**",
+        "/swagger-resources/**",
+        "/webjars/**",
+        // Разрешаем доступ к эндпоинтам аутентификации и восстановления пароля
+        "/api/v1/auth/**",
+        "/api/v1/recovery/**",
+        // НОВОЕ: Разрешаем доступ к эндпоинту отправки контактной формы
+        "/api/send-email", // <-- ДОБАВЬ ЭТУ СТРОКУ
+        // Базовые пути, которые могут быть доступны без аутентификации (например, корневой URL)
+        "/",
+        "/error"
+    ).permitAll() // Эти пути доступны всем
                 
                 // Только пользователи с ролью "ADMIN" или "SUPER_ADMIN" могут получить доступ к /api/v1/admin/**
                 .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
@@ -72,26 +74,26 @@ public class SecurityConfig {
     }
 
     @Bean
-    public CorsConfigurationSource corsConfigurationSource() {
-        CorsConfiguration config = new CorsConfiguration();
-        
-        config.setAllowedOrigins(List.of(
-                "http://localhost:5173",
-                "https://agrofarm.kz",
-                "https://user.agrofarm.kz",
-                "https://www.user.agrofarm.kz",
-                "https://www.agrofarm.kz"
-        ));
-        
-        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
-        config.setExposedHeaders(List.of("Authorization"));
-        config.setAllowCredentials(true);
+public CorsConfigurationSource corsConfigurationSource() {
+    CorsConfiguration config = new CorsConfiguration();
+    
+    config.setAllowedOrigins(List.of(
+            "http://localhost:5173", // Для локальной разработки фронтенда
+            "https://agrofarm.kz",
+            "https://user.agrofarm.kz", // Возможно, домен твоего фронтенда?
+            "https://www.user.agrofarm.kz",
+            "https://www.agrofarm.kz"
+    ));
+    
+    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+    config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+    config.setExposedHeaders(List.of("Authorization"));
+    config.setAllowCredentials(true);
 
-        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-        source.registerCorsConfiguration("/**", config);
-        return source;
-    }
+    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+    source.registerCorsConfiguration("/**", config); // Применяет CORS ко всем путям
+    return source;
+}
 
 
     @Bean
