@@ -2,13 +2,15 @@ package com.example.backend.config;
 
 import com.example.backend.JWT.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.HttpMethod;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
-import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity; // Убедитесь, что это импортировано
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -17,14 +19,14 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
 import org.springframework.web.cors.CorsConfiguration;
-import org.springframework.web.cors.CorsConfigurationSource;
 import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 
 import java.util.List;
 
 @Configuration
 @RequiredArgsConstructor
-@EnableMethodSecurity // Включаем поддержку @PreAuthorize
+@EnableMethodSecurity
 public class SecurityConfig {
 
     private final JwtAuthenticationFilter jwtAuthFilter;
@@ -33,77 +35,75 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
-            .csrf().disable() // Отключаем CSRF для REST API
-            .cors(cors -> cors.configurationSource(corsConfigurationSource())) // Настраиваем CORS
+            .csrf().disable()
+            .cors().and() // Важно — включаем CORS, даже если фильтр добавлен отдельно
             .authorizeHttpRequests(auth -> auth
-                // Разрешаем доступ к Swagger UI и API документации
+                // Разрешаем preflight (OPTIONS) запросы
+                .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
+
+                // Swagger и публичные эндпоинты
                 .requestMatchers(
-        "/swagger-ui/**",
-        "/v3/api-docs/**",
-        "/swagger-resources/**",
-        "/webjars/**",
-        // Разрешаем доступ к эндпоинтам аутентификации и восстановления пароля
-        "/api/v1/auth/**",
-        "/api/v1/recovery/**",
-        // НОВОЕ: Разрешаем доступ к эндпоинту отправки контактной формы
-        "/api/send-email", // <-- ДОБАВЬ ЭТУ СТРОКУ
-        // Базовые пути, которые могут быть доступны без аутентификации (например, корневой URL)
-        "/",
-        "/error"
-    ).permitAll() // Эти пути доступны всем
-                
-                // Только пользователи с ролью "ADMIN" или "SUPER_ADMIN" могут получить доступ к /api/v1/admin/**
+                    "/swagger-ui/**",
+                    "/v3/api-docs/**",
+                    "/swagger-resources/**",
+                    "/webjars/**",
+                    "/api/v1/auth/**",
+                    "/api/v1/recovery/**",
+                    "/api/send-email",
+                    "/",
+                    "/error"
+                ).permitAll()
+
+                // Админ-доступ
                 .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
-                
-                // Все остальные API-эндпоинты, начинающиеся с /api/, требуют аутентификации
-                // (но не требуют конкретной роли, если только это не /api/v1/admin/**)
+
+                // Остальные /api/** требуют JWT
                 .requestMatchers("/api/**").authenticated()
-                
-                // Все остальные запросы (не /api) также требуют аутентификации
+
+                // Всё остальное — тоже защищено
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess
-                .sessionCreationPolicy(SessionCreationPolicy.STATELESS) // Используем безсессионную аутентификацию (JWT)
+                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)
             )
-            .authenticationProvider(authenticationProvider()) // Указываем наш провайдер аутентификации
-            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class) // Добавляем JWT фильтр перед стандартным
-            .formLogin().disable() // Отключаем стандартную форму входа
-            .httpBasic().disable(); // Отключаем базовую HTTP-аутентификацию
+            .authenticationProvider(authenticationProvider())
+            .addFilterBefore(jwtAuthFilter, UsernamePasswordAuthenticationFilter.class)
+            .formLogin().disable()
+            .httpBasic().disable();
 
         return http.build();
     }
 
     @Bean
-public CorsConfigurationSource corsConfigurationSource() {
-    CorsConfiguration config = new CorsConfiguration();
-    
-    config.setAllowedOrigins(List.of(
-        // "http://localhost:5173", // Можно убрать для продакшена на Railway
-        "https://agrofarm.kz",
-        "https://user.agrofarm.kz", 
-        "https://www.user.agrofarm.kz",
-        "https://www.agrofarm.kz"
-));
-    
-    config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-    config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
-    config.setExposedHeaders(List.of("Authorization"));
-    config.setAllowCredentials(true);
+    public FilterRegistrationBean<CorsFilter> corsFilterRegistrationBean() {
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(List.of(
+            "https://agrofarm.kz",
+            "https://www.agrofarm.kz",
+            "https://user.agrofarm.kz",
+            "https://www.user.agrofarm.kz"
+        ));
+        config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
+        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        config.setExposedHeaders(List.of("Authorization"));
+        config.setAllowCredentials(true);
 
-    UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
-    source.registerCorsConfiguration("/**", config); // Применяет CORS ко всем путям
-    return source;
-}
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        source.registerCorsConfiguration("/**", config);
 
+        FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
+        bean.setOrder(0); // 👈 важно: до Spring Security
+        return bean;
+    }
 
     @Bean
     public AuthenticationProvider authenticationProvider() {
         DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider();
-        authProvider.setUserDetailsService(userDetailsService); // Указываем наш UserDetailsService
-        authProvider.setPasswordEncoder(passwordEncoder()); // Указываем наш PasswordEncoder
+        authProvider.setUserDetailsService(userDetailsService);
+        authProvider.setPasswordEncoder(passwordEncoder());
         return authProvider;
     }
-    
+
     @Bean
     public AuthenticationManager authenticationManager(AuthenticationConfiguration config) throws Exception {
         return config.getAuthenticationManager();
@@ -111,6 +111,6 @@ public CorsConfigurationSource corsConfigurationSource() {
 
     @Bean
     public PasswordEncoder passwordEncoder() {
-        return new BCryptPasswordEncoder(); // Используем BCrypt для хеширования паролей
+        return new BCryptPasswordEncoder();
     }
 }
