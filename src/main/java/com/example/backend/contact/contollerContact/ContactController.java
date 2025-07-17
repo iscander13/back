@@ -20,7 +20,7 @@ public class ContactController {
     @Autowired
     private ContactService contactService; // Инжектируем сервис
 
-    @PostMapping("/api/send-email")
+    @PostMapping("/api/v1/send-email")
 @CrossOrigin(
     origins = {
         "https://agrofarm.kz",
