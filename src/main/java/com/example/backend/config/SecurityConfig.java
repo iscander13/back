@@ -36,12 +36,11 @@ public class SecurityConfig {
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
             .csrf().disable()
-            .cors().and() // Важно — включаем CORS, даже если фильтр добавлен отдельно
+            .cors().and()
             .authorizeHttpRequests(auth -> auth
-                // Разрешаем preflight (OPTIONS) запросы
                 .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
 
-                // Swagger и публичные эндпоинты
+                // Публичные эндпоинты
                 .requestMatchers(
                     "/swagger-ui/**",
                     "/v3/api-docs/**",
@@ -57,10 +56,8 @@ public class SecurityConfig {
                 // Админ-доступ
                 .requestMatchers("/api/v1/admin/**").hasAnyRole("ADMIN", "SUPER_ADMIN")
 
-                // Остальные /api/** требуют JWT
+                // Остальные защищены
                 .requestMatchers("/api/**").authenticated()
-
-                // Всё остальное — тоже защищено
                 .anyRequest().authenticated()
             )
             .sessionManagement(sess -> sess
@@ -84,7 +81,12 @@ public class SecurityConfig {
             "https://www.user.agrofarm.kz"
         ));
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
-        config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
+        config.setAllowedHeaders(List.of(
+            "Authorization",
+            "Content-Type",
+            "X-Requested-With",
+            "Origin" // 🔧 Добавлено!
+        ));
         config.setExposedHeaders(List.of("Authorization"));
         config.setAllowCredentials(true);
 
@@ -92,7 +94,7 @@ public class SecurityConfig {
         source.registerCorsConfiguration("/**", config);
 
         FilterRegistrationBean<CorsFilter> bean = new FilterRegistrationBean<>(new CorsFilter(source));
-        bean.setOrder(0); // 👈 важно: до Spring Security
+        bean.setOrder(0); // Важно: ставим фильтр ДО Spring Security
         return bean;
     }
 

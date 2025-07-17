@@ -21,7 +21,7 @@ public class PasswordRecoveryService {
     private EmailService emailService;
 
     @Autowired
-    private PasswordEncoder passwordEncoder; // Инжектируем PasswordEncoder из SecurityConfig
+    private PasswordEncoder passwordEncoder; 
 
     public void sendRecoveryCode(String email) {
         Optional<User> optionalUser = userRepository.findByEmail(email);
