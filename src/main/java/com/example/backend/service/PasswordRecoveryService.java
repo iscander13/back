@@ -1,14 +1,15 @@
 package com.example.backend.service;
 
-import com.example.backend.entiity.User;
-import com.example.backend.repository.UserRepository;
+import java.time.LocalDateTime;
+import java.util.Optional;
+import java.util.Random;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
-import java.time.LocalDateTime;
-import java.util.Optional;
-import java.util.Random;
+import com.example.backend.entiity.User;
+import com.example.backend.repository.UserRepository;
 
 @Service
 public class PasswordRecoveryService {
@@ -22,7 +23,6 @@ public class PasswordRecoveryService {
     @Autowired
     private PasswordEncoder passwordEncoder; // Инжектируем PasswordEncoder из SecurityConfig
 
-    // 1. Отправка кода на email
     public void sendRecoveryCode(String email) {
         Optional<User> optionalUser = userRepository.findByEmail(email);
         if (optionalUser.isEmpty()) {
