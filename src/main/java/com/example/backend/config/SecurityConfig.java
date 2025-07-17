@@ -78,12 +78,12 @@ public CorsConfigurationSource corsConfigurationSource() {
     CorsConfiguration config = new CorsConfiguration();
     
     config.setAllowedOrigins(List.of(
-            "http://localhost:5173", // Для локальной разработки фронтенда
-            "https://agrofarm.kz",
-            "https://user.agrofarm.kz", // Возможно, домен твоего фронтенда?
-            "https://www.user.agrofarm.kz",
-            "https://www.agrofarm.kz"
-    ));
+        // "http://localhost:5173", // Можно убрать для продакшена на Railway
+        "https://agrofarm.kz",
+        "https://user.agrofarm.kz", 
+        "https://www.user.agrofarm.kz",
+        "https://www.agrofarm.kz"
+));
     
     config.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
     config.setAllowedHeaders(List.of("Authorization", "Content-Type", "X-Requested-With"));
