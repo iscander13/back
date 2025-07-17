@@ -1,9 +1,12 @@
 package com.example.backend.util;
 
-import org.locationtech.jts.geom.*;
-import org.springframework.stereotype.Component;
-
 import java.util.List;
+
+import org.locationtech.jts.geom.Coordinate;
+import org.locationtech.jts.geom.GeometryFactory;
+import org.locationtech.jts.geom.Polygon;
+import org.locationtech.jts.geom.PrecisionModel;
+import org.springframework.stereotype.Component;
 
 @Component
 public class GeometryUtils {
@@ -15,7 +18,6 @@ public class GeometryUtils {
                 .map(pair -> new Coordinate(pair.get(0), pair.get(1)))
                 .toList();
 
-        // замыкаем контур, если не замкнут
         if (!coords.get(0).equals2D(coords.get(coords.size() - 1))) {
             coords = new java.util.ArrayList<>(coords);
             coords.add(coords.get(0));
