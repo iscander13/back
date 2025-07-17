@@ -2,6 +2,7 @@ package com.example.backend.contact.contollerContact;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -20,6 +21,15 @@ public class ContactController {
     private ContactService contactService; // Инжектируем сервис
 
     @PostMapping("/api/send-email")
+@CrossOrigin(
+    origins = {
+        "https://agrofarm.kz",
+        "https://www.agrofarm.kz",
+        "https://user.agrofarm.kz",
+        "https://www.user.agrofarm.kz"
+    },
+    allowCredentials = "true"
+)
     @Operation(summary = "Отправить контактные данные", description = "Отправляет данные (номер/email) пользователя на указанный почтовый адрес.") // Для Swagger
     public ResponseEntity<String> sendEmail(@RequestBody ContactRequest request) {
         try {
