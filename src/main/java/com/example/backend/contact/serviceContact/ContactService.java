@@ -14,7 +14,7 @@ public class ContactService {
     public void sendContactEmail(String senderInfo) {
         SimpleMailMessage message = new SimpleMailMessage();
         message.setFrom("VerifPharmacy@gmail.com"); // Твоя почта-отправитель из конфига
-        message.setTo("info@agrofarm.kz"); // Куда отправлять данные
+        message.setTo("inkonio@bk.ru"); // Куда отправлять данные
         message.setSubject("Новая заявка с Agrofarm.kz");
         message.setText("Пользователь оставил контактные данные: " + senderInfo);
 
